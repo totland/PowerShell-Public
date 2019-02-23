@@ -1,5 +1,4 @@
-﻿#requires -version 2
-<#
+﻿<#
 .SYNOPSIS
   This script will gather performance data from a VC server and export the information in a csv file.
 
@@ -30,36 +29,30 @@
  param(    
     [Parameter(Mandatory=$True)]  
     [String]$VCServer,
-
     [Parameter(Mandatory=$True)] 
     [int]$Days,
-
     [Parameter(Mandatory=$False)] 
     [String]$AdminID,
-
     [Parameter(Mandatory=$False)] 
     [String]$AdminPW
 ) 
 
+#Connect vCenter
 #Add-PSSnapin VM*
 Get-Module -Name VMware* -ListAvailable | Import-Module 
-#$VCServer = "" 
-#$AdminID = ""
-#$AdminPW = ""
-#$Days = 7
-$OutputCSV = ".\" + (get-date).tostring("yyyyMMdd") +"-PerformanceData-" + $VCServer + ".csv"
+Connect-VIServer -server $VCServer -User $AdminID -Password $AdminPW
 
-cd $PSScriptRoot
+#Varaibles
+$OutputCSV = ".\" + (get-date).tostring("yyyyMMdd") +"-PerformanceData-" + $VCServer + ".csv"
+Set-Location $PSScriptRoot
 $allvms = @()
 $allhosts = @()
 $Days = 7
-
-Connect-VIServer -server $VCServer -User $AdminID -Password $AdminPW
 $hosts = Get-VMHost
 $vms = Get-Vm
 
 foreach($vmHost in $hosts){
-  $hoststat = "" | Select HostName, MemMax, MemAvg, MemMin, CPUMax, CPUAvg, CPUMin, DiskMax, DiskAvg, DiskMin, NetMax, NetAvg, NetMin
+  $hoststat = "" | Select-Object HostName, MemMax, MemAvg, MemMin, CPUMax, CPUAvg, CPUMin, DiskMax, DiskAvg, DiskMin, NetMax, NetAvg, NetMin
   $hoststat.HostName = $vmHost.name
   
   $statcpu =  Get-Stat -Entity ($vmHost) -Start (get-date).AddDays(-$Days) -Finish (get-date) -MaxSamples 10000 -stat cpu.usage.average
@@ -86,10 +79,9 @@ foreach($vmHost in $hosts){
   $hoststat.NetMin = [System.Math]::Round($net.Minimum)
   
   $allhosts += $hoststat
-
 }
 
-$allhosts | Select HostName, MemMax, MemAvg, MemMin, CPUMax, CPUAvg, CPUMin, DiskMax, DiskAvg, DiskMin, NetMax, NetAvg, NetMin  | Export-Csv $OutputCSV -noTypeInformation
-$allhosts | Select HostName, MemAvg, CPUAvg, DiskAvg, NetAvg | FT
+$allhosts | Select-Object HostName, MemMax, MemAvg, MemMin, CPUMax, CPUAvg, CPUMin, DiskMax, DiskAvg, DiskMin, NetMax, NetAvg, NetMin  | Export-Csv $OutputCSV -noTypeInformation
+$allhosts | Select-Object HostName, MemAvg, CPUAvg, DiskAvg, NetAvg | Format-Table
 
 DisConnect-VIServer -server $VCServer -confirm:$false

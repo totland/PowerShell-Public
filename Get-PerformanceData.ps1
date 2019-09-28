@@ -3,7 +3,7 @@
   This script will gather performance data from a VC server and export the information in a csv file.
 
 .DESCRIPTION
-  <Brief description of script>
+  <Brief description of script>  
 
 .PARAMETER <Parameter_Name>
   vCenter Name

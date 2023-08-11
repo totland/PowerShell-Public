@@ -1,5 +1,5 @@
 ﻿Set-Location $PSScriptRoot
-$names = Get-content "Test-ServerList.txt"
+$names = Get-content "test-ConnectServer.txt"
 
 foreach ($name in $names){
     $name = $name + ".home.local"
